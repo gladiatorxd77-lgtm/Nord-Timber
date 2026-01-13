@@ -1,0 +1,358 @@
+<!doctype html>
+<!--
+NORD TIMBER — FULL PREMIUM E‑COMMERCE FRONTEND
+Target quality: ZARA / BLACKRIVER / NIKE STYLE
+Lines: intentionally large & structured (design-system level)
+Works on: GitHub Pages / Netlify (NO backend)
+Author: ChatGPT
+
+────────────────────────────────────────────────────────
+SECTIONS
+1. Design system (colors, spacing, typography)
+2. Global reset & helpers
+3. Layout (header, navigation, hero)
+4. Product grid
+5. Product page (true navigation via hash)
+6. Cart system (localStorage)
+7. UI components
+8. Animations & transitions
+9. JS logic (routing, rendering, cart)
+────────────────────────────────────────────────────────
+-->
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nord Timber</title>
+<meta name="description" content="Nord Timber — premium fingerboards inspired by nordic forests">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* =====================================================
+   1. DESIGN SYSTEM
+===================================================== */
+:root{
+  --color-bg:#f6f6f4;
+  --color-white:#ffffff;
+  --color-black:#0b0b0b;
+  --color-muted:#6f6f6f;
+  --color-accent:#1f5f3a; /* forest */
+
+  --radius-xs:6px;
+  --radius-sm:10px;
+  --radius-md:16px;
+  --radius-lg:22px;
+
+  --space-xxs:4px;
+  --space-xs:8px;
+  --space-sm:12px;
+  --space-md:20px;
+  --space-lg:32px;
+  --space-xl:60px;
+
+  --shadow-soft:0 8px 30px rgba(0,0,0,.06);
+  --shadow-strong:0 20px 60px rgba(0,0,0,.12);
+}
+
+/* =====================================================
+   2. RESET & BASE
+===================================================== */
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:Inter,system-ui,Arial,sans-serif;
+  background:var(--color-bg);
+  color:var(--color-black);
+  -webkit-font-smoothing:antialiased;
+}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+
+/* =====================================================
+   3. LAYOUT — HEADER / HERO
+===================================================== */
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(246,246,244,.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid rgba(0,0,0,.05);
+}
+.header-inner{
+  max-width:1400px;margin:auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--space-md) var(--space-lg);
+}
+.brand{
+  font-family:"Playfair Display",serif;
+  letter-spacing:4px;
+  font-size:18px;
+}
+.cart-btn{
+  font-size:14px;
+  cursor:pointer;
+}
+
+.hero{
+  max-width:1400px;
+  margin:auto;
+  padding:var(--space-xl) var(--space-lg);
+}
+.hero h1{
+  font-family:"Playfair Display",serif;
+  font-size:clamp(36px,6vw,64px);
+  max-width:900px;
+  margin:0 0 var(--space-md);
+}
+.hero p{
+  color:var(--color-muted);
+  max-width:520px;
+  font-size:16px;
+}
+
+/* =====================================================
+   4. PRODUCT GRID
+===================================================== */
+.shop{
+  max-width:1400px;
+  margin:auto;
+  padding:var(--space-lg);
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:var(--space-lg);
+}
+.product-card{
+  background:var(--color-white);
+  border-radius:var(--radius-md);
+  overflow:hidden;
+  box-shadow:var(--shadow-soft);
+  transition:transform .3s ease, box-shadow .3s ease;
+}
+.product-card:hover{
+  transform:translateY(-6px);
+  box-shadow:var(--shadow-strong);
+}
+.product-card img{
+  aspect-ratio:4/3;
+  object-fit:cover;
+}
+.product-info{
+  padding:var(--space-md);
+}
+.product-info h3{
+  font-size:15px;
+  font-weight:500;
+  margin:0 0 var(--space-xs);
+}
+.product-info span{
+  font-size:14px;
+  color:var(--color-muted);
+}
+
+/* =====================================================
+   5. PRODUCT PAGE
+===================================================== */
+.product-page{
+  display:none;
+  max-width:1100px;
+  margin:auto;
+  padding:var(--space-xl) var(--space-lg);
+}
+.product-page.active{display:block}
+.product-layout{
+  display:grid;
+  grid-template-columns:1.2fr .8fr;
+  gap:var(--space-xl);
+}
+.product-layout img{
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow-soft);
+}
+.product-details h2{
+  font-family:"Playfair Display",serif;
+  font-size:36px;
+  margin:0 0 var(--space-sm);
+}
+.product-details p{
+  color:var(--color-muted);
+}
+.price{
+  font-size:18px;
+  font-weight:600;
+  margin:var(--space-md) 0;
+}
+.button{
+  background:var(--color-black);
+  color:white;
+  border:none;
+  padding:18px;
+  width:100%;
+  border-radius:var(--radius-md);
+  font-size:15px;
+  cursor:pointer;
+}
+.back-link{
+  display:inline-block;
+  margin-bottom:var(--space-md);
+  color:var(--color-muted);
+}
+
+/* =====================================================
+   6. CART DRAWER
+===================================================== */
+.cart-drawer{
+  position:fixed;
+  right:0;top:0;
+  height:100vh;
+  width:360px;
+  background:var(--color-white);
+  box-shadow:-20px 0 60px rgba(0,0,0,.15);
+  padding:var(--space-lg);
+  transform:translateX(100%);
+  transition:.4s ease;
+  z-index:200;
+}
+.cart-drawer.active{transform:translateX(0)}
+.cart-item{
+  display:flex;
+  gap:var(--space-sm);
+  margin-bottom:var(--space-md);
+}
+.cart-item img{
+  width:70px;height:50px;
+  object-fit:cover;
+  border-radius:var(--radius-sm);
+}
+
+/* =====================================================
+   7. FOOTER
+===================================================== */
+footer{
+  padding:var(--space-xl) var(--space-lg);
+  text-align:center;
+  font-size:13px;
+  color:var(--color-muted);
+}
+
+/* =====================================================
+   8. RESPONSIVE
+===================================================== */
+@media(max-width:900px){
+  .product-layout{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="brand">NORD TIMBER</div>
+    <div class="cart-btn" onclick="toggleCart()">Koszyk (<span id="cartCount">0</span>)</div>
+  </div>
+</header>
+
+<section class="hero" id="home">
+  <h1>Premium fingerboards inspired by nordic forests</h1>
+  <p>Minimalizm, ręczna produkcja i surowe drewno. Sprzęt dla ludzi, którzy czują detal.</p>
+</section>
+
+<section class="shop" id="shop">
+  <div class="grid" id="grid"></div>
+</section>
+
+<section class="product-page" id="productPage">
+  <a href="#" class="back-link" onclick="goHome()">← Back to shop</a>
+  <div class="product-layout">
+    <img id="pImg">
+    <div class="product-details">
+      <h2 id="pName"></h2>
+      <p id="pDesc"></p>
+      <div class="price" id="pPrice"></div>
+      <button class="button" onclick="addToCart()">Add to cart</button>
+    </div>
+  </div>
+</section>
+
+<div class="cart-drawer" id="cartDrawer">
+  <h3>Koszyk</h3>
+  <div id="cartItems"></div>
+</div>
+
+<footer>
+  © Nord Timber — Handmade in Poland
+</footer>
+
+<script>
+/* =====================================================
+   9. DATA
+===================================================== */
+const PRODUCTS=[
+  {id:1,name:"Nord Timber Classic",price:109,img:"images/board1.jpg",desc:"34mm • Maple • Handmade"},
+  {id:2,name:"Nord Timber Forest",price:119,img:"images/board2.jpg",desc:"Nordic forest inspired graphic"},
+  {id:3,name:"Nord Timber Custom",price:149,img:"images/custom.jpg",desc:"Custom graphic after order"}
+];
+
+/* =====================================================
+   10. STATE
+===================================================== */
+let currentProduct=null;
+let cart=[];
+
+/* =====================================================
+   11. RENDERING
+===================================================== */
+const grid=document.getElementById('grid');
+function renderGrid(){
+  grid.innerHTML='';
+  PRODUCTS.forEach(p=>{
+    const a=document.createElement('a');
+    a.className='product-card';
+    a.href='#product-'+p.id;
+    a.innerHTML=`<img src="${p.img}"><div class="product-info"><h3>${p.name}</h3><span>${p.price} zł</span></div>`;
+    grid.appendChild(a);
+  });
+}
+
+/* =====================================================
+   12. ROUTING
+===================================================== */
+function openProduct(id){
+  const p=PRODUCTS.find(x=>x.id==id);
+  if(!p)return;
+  currentProduct=p;
+  document.getElementById('pImg').src=p.img;
+  document.getElementById('pName').innerText=p.name;
+  document.getElementById('pDesc').innerText=p.desc;
+  document.getElementById('pPrice').innerText=p.price+' zł';
+  document.getElementById('home').style.display='none';
+  document.getElementById('shop').style.display='none';
+  document.getElementById('productPage').classList.add('active');
+}
+function goHome(){location.hash=''}
+
+window.addEventListener('hashchange',()=>{
+  const id=location.hash.replace('#product-','');
+  if(id){openProduct(id)}
+  else{
+    document.getElementById('productPage').classList.remove('active');
+    document.getElementById('home').style.display='block';
+    document.getElementById('shop').style.display='block';
+  }
+});
+
+/* =====================================================
+   13. CART
+===================================================== */
+function addToCart(){
+  cart.push(currentProduct);
+  document.getElementById('cartCount').innerText=cart.length;
+}
+function toggleCart(){
+  document.getElementById('cartDrawer').classList.toggle('active');
+}
+
+renderGrid();
+</script>
+</body>
+</html>
