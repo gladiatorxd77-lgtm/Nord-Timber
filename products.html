@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nord Timber</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<a href="index.html" class="back">← Back</a>
+
+<div class="product-page">
+  <img id="img">
+  <div class="info">
+    <h2 id="name"></h2>
+    <p id="desc"></p>
+    <strong id="price"></strong>
+    <button onclick="add()">Add to cart</button>
+  </div>
+</div>
+
+<script src="products.js"></script>
+<script>
+const p = products[new URLSearchParams(location.search).get("id")];
+img.src = p.image;
+name.innerText = p.name;
+desc.innerText = p.desc;
+price.innerText = p.price + " zł";
+
+function add() {
+  alert("Dodano do koszyka (checkout w kolejnym kroku)");
+}
+</script>
+</body>
+</html>
